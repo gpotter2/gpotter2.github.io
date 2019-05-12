@@ -1,5 +1,4 @@
 ---
-layout: default
 ---
 
 ## My random stuff
@@ -7,5 +6,5 @@ layout: default
 There's pretty much jothing here (yet), this is more of a hosting page for now.
 
 Tutorials I made some time ago:
-- [SSLSockets in Java](/tutos/sslsockets) (french)
+- _**SSLSockets in Java:**_ [French](/tutos/sslsockets)  or [English](/tutos/en/sslsockets)
 

@@ -1,18 +1,15 @@
 ---
 name: sslsockets
-title: SSLSockets
+title: Tutoriel SSLSockets
 description: Comment créer facilement des Sockets sécurisés en Java.
-layout: default
+comments: true
 ---
 
----
-**NOTE**
+**MISE EN GARDE**
+Le tutoriel qui va suivre a été [rédigé en 2015-2016, en tant que tutoriel non officiel pour OpenClassroom](https://openclassrooms.com/forum/sujet/tutorial-ssl-socket-en-java-android), puis a été retravaillé en une [seconde version en attente sur le courselab](https://openclassrooms.com/courses/3449986?status=waiting-for-publication). Après trois ans d'attente, le courselab ayant fermé, il a été reposté ici (sous format Markdown).
+Une traduction anglaise est disponible [ici](/tutos/en/sslsockets). Il n'est peut être malheureusement plus autant à jour qu'à l'époque :/
+{: .notice--warning}
 
-Le tutoriel qui va suivre a été [rédigé en 2015-2016, en tant que tutoriel non officiel pour OpenClassroom](https://openclassrooms.com/forum/sujet/tutorial-ssl-socket-en-java-android), puis a été retravaillé en une [seconde cersion puibliée sur le courselab](https://openclassrooms.com/courses/3449986?status=waiting-for-publication). Le courselab ayant fermé, il a été reposté ici.
-
-Il n'est peut être malheureusement plus autant à jour qu'à l'époque :/
-
----
 
 Bonjour à tous !
 
@@ -43,7 +40,7 @@ Il faut avoir des bases en Socket et ServerSocket. Ce tutoriel apprend à créer
 Rappel: Si vous n'avez jamais utilisé les Socket / ServerSocket, c'est pas ici que vous apprendrez... Je vous conseille [ce cours](https://openclassrooms.com/courses/introduction-aux-sockets-1), vous êtes prévenus ![](/images/sslsockets/langue.png)
 {: .notice--danger}
 
-###  Les logiciels
+##  Les logiciels
 
 On va utiliser Java (bien sûr ![](/images/sslsockets/smile.png)) et _**Porteclé**_, logiciel de certificat avec une interface graphique téléchargeable [ici](https://sourceforge.net/projects/portecle/)
 
@@ -63,7 +60,7 @@ Dans cette partie, on va donc créer les certificats sous forme de **Keystore**,
 On peut créer un certificat en ligne de code, mais pour simplifier, ici on va utiliser le logiciel _**Porteclé**_, qui fonctionne en Java. Il possède une interface graphique et est donc facile à utiliser.
 {: .notice--info}
 
-### Les certificats sous Android
+## Les certificats sous Android
 
 Cette partie concerne UNIQUEMENT Android, en java, passez votre chemin vers l'étappe 1
 {: .notice--warning}
@@ -72,17 +69,17 @@ Pour android, il faudra utiliser le BKS au lieu du JKS. C'est une spécificité 
 
 Ainsi, il faudra sélectionner du BKS au lieu du JKS pour les certificats (soit privé, soit public, soit les 2) qui seront installés et utilisés sous android.
 
-### Création des certificats
+## Création des certificats
 
 Voici les étapes à suivre pour créer facilement deux fichiers JKS ou BKS, l'un pour le serveur et l'autre pour le client:
 
-#### Etape 1: Lancement
+### Etape 1: Lancement
 
 Lancer Porte clé
 
  ![](/images/sslsockets/Etappe 1.png)
 
-#### **Etape 2: Choisir le type de la clé serveur**
+### Etape 2: Choisir le type de la clé serveur
 
 Pour Android: Comme on est sur le serveur, il est très peu probable de créer un serveur SSL/TLS Android.... mais bon... on ne sait jamais ![](/images/sslsockets/clin.png) **Donc si le SERVEUR est en Android, on met BKS au lieu de JKS**
 {: .notice--warning}
@@ -91,7 +88,7 @@ Cliquer sur Nouveau --> JKS pour du java (BKS pour l'Android **SERVEUR**)
 
  ![](/images/sslsockets/Etappe 2_5.png)
 
-#### **Etape 3: La clé serveur privée**
+### **Etape 3: La clé serveur privée**
 
 On crée une clé privée:
 
@@ -143,7 +140,7 @@ On vient de fabriquer la clé privée.
 
 Maintenant, on va s'occuper de la clé publique. Pour celle la, on aura besoin du certificat publique de la clé privée.
 
-#### Etape 4 : Exporter la clé publique
+### Etape 4 : Exporter la clé publique
 
 On va maintenant extraire le certificat public. On va donc effectuer, toujours sur la clé Privée:
 
@@ -159,7 +156,7 @@ Et on l'enregistre:
 
  ![](/images/sslsockets/Etappe 4.3.png)
 
-On appellera ce fichier _**CERTIFICAT\_EXT **_pour la suite des étapes.
+On appellera ce fichier _**CERTIFICAT\_EXT**_ pour la suite des étapes.
 {: .notice--warning}
 
 Pour assurer la rétro-compabilité vers les vielles versions d'Android (API 16 et moins), suivre maintenant la partie 2 pour ce fichier (tant qu'il est ouvert). On reprendra ensuite les étapes à partir d'ici.
@@ -167,7 +164,7 @@ Pour assurer la rétro-compabilité vers les vielles versions d'Android (API 16 
 
 On en a maintenant finit avec la clé privée !
 
-#### Etape 5 : Choisir le type de la clé publique
+### Etape 5 : Choisir le type de la clé publique
 
 Cette fois si, si vous voulez créer un client sur Android, plus fréquent, il faut mettre BKS.
 {: .notice--warning}
@@ -176,7 +173,7 @@ Cliquer sur Nouveau --> JKS pour du java, et BKS pour du Android.
 
  ![](/images/sslsockets/Etappe 2_51.png)
 
-#### Etape 6 : Importer le certificat
+### Etape 6 : Importer le certificat
 
 Sur la clé publique, on sélectionne:
 
@@ -186,7 +183,7 @@ Puis, on sélectionne le fichier _**CERTIFICAT\_EXT **_enregistré précédemm
 
  ![](/images/sslsockets/Etappe 6.21.png)
 
-![](/images/sslsockets/Etappe 6.3.png)
+ ![](/images/sslsockets/Etappe 6.3.png)
 
 Et on rentre ensuite un alias (surnom du certificat). Par simplicité, on met le même que sur la clé privée:
 
@@ -220,7 +217,7 @@ On n'a plus besoin du fichier CERTIFICAT\_EXT. On peut le supprimer pour ne plus
 Partie 2 : Certificats pour rétro-compabilité sous Android
 ----------------------------------------------------------
 
-### Section spéciale Android pourri  !!
+## Section spéciale Android pourri  !!
 
 Cette partie abordera la compatibilité avec les versions les plus anciennes et sombres d'Android........![](/images/sslsockets/diable.png)
 
@@ -255,7 +252,7 @@ Prenez garde ! Si vous vouler utiliser SSL au lieu de TLS, il faut le changer da
 On peut remplacer **_TLSv1.2_**par **_SSL_**  , pour supporter par les vielles versions. Je vous le déconseille cependant ![:)](/images/sslsockets/smile.png)
 {: .notice--warning}
 
-### Classe utilitaire pour le serveur:
+## Classe utilitaire pour le serveur:
 
 ```java
 /**
@@ -324,7 +321,7 @@ public static SSLServerSocket getServerSocketWithCert(int port, InputStream path
        }
 ```         
 
-### Classe utilitaire pour le client
+## Classe utilitaire pour le client
 
 ```java
 /**
@@ -372,7 +369,7 @@ public static SSLSocket getSocketWithCert(InetAddress ip, int port, InputStream 
        }
 ``` 
 
-### Utilisation:
+## Utilisation:
 
 Euh, merci mais comment on s'en sert ?
 {: .notice--primary}
@@ -385,13 +382,13 @@ Oh ! Mais qui voilà ??? Les mots de passe qu'il fallait conserver !
 Ici on suppose que le stream provient d'un fichier intégré au .jar, il peut aussi être externe, auquel cas on replacera le this.getClass().get..... par n'importe quel autre stream pointant vers la clé
 {: .notice--info}
 
-#### Pour une SSLServerSocket (serveur):
+### Pour une SSLServerSocket (serveur):
 
 ```java
 SSLServerSocket ssocket = SSLServerSocketKeystoreFactory.getServerSocketWithCert(port, this.getClass().getResourceAsStream("/CLE_PRIVEE.jks"), "MOTDEPASSE1")
 ```                 
 
-#### Pour une SSLSocket (client):
+### Pour une SSLSocket (client):
 
 ```java
 SSLSocket socket = SSLSocketKeystoreFactory.getSocketWithCert(addresse_ip, port, this.getClass().getResourceAsStream("/CLE_PUBLIQUE.jks"), "MOTDEPASSE2")
@@ -400,7 +397,7 @@ SSLSocket socket = SSLSocketKeystoreFactory.getSocketWithCert(addresse_ip, port,
 Des classes toute faites comportant le code sont disponibles en anglais. Le lien est dans l'annexe.
 {: .notice--info}
 
-### Section spéciale Android !!
+## Section spéciale Android !!
 
 Cette section est pour android uniquement !
 {: .notice--warning}

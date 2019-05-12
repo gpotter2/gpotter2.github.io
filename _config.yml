@@ -9,11 +9,26 @@ remote_theme: "mmistakes/minimal-mistakes@4.16.3"
 
 plugins:
 - jekyll-include-cache
+- jekyll-remote-theme
 
 collections:
   tutos:
     output: true
     permalink: /tutos/:name
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: single
+
+# Minimal mistakes config
+
+minimal_mistakes_skin: "dark"
+comments:
+  provider: "disqus"
+  disqus:
+    shortname: "gpotter2"
 
 # Exclude from processing.
 # The following items will not be processed, by default. Create a custom list
