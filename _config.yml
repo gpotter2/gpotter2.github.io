@@ -1,0 +1,28 @@
+title: gpotter2's random stuff
+# email: 
+description: Home of random stuff
+# twitter_username: 
+github_username: gpotter2
+
+# Build settings
+remote_theme: "mmistakes/minimal-mistakes@4.16.3"
+
+plugins:
+- jekyll-include-cache
+
+collections:
+  tutos:
+    output: true
+    permalink: /tutos/:name
+
+# Exclude from processing.
+# The following items will not be processed, by default. Create a custom list
+# to override the default setting.
+# exclude:
+#   - Gemfile
+#   - Gemfile.lock
+#   - node_modules
+#   - vendor/bundle/
+#   - vendor/cache/
+#   - vendor/gems/
+#   - vendor/ruby/
