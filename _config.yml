@@ -10,11 +10,17 @@ remote_theme: "mmistakes/minimal-mistakes@4.16.3"
 plugins:
 - jekyll-include-cache
 - jekyll-remote-theme
+- jekyll-feed
+- jekyll-sitemap
 
 collections:
   tutos:
     output: true
     permalink: /tutos/:name
+
+feed:
+  collections:
+    - tutos
 
 defaults:
   - scope:
