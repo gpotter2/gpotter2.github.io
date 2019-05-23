@@ -3,7 +3,7 @@
 
 ## My random stuff
 
-There's pretty much jothing here (yet), this is more of a hosting page for now.
+There's pretty much nothing here (yet), this is more of a hosting page for now.
 
 Tutorials I made some time ago:
 - _**SSLSockets in Java:**_ [French](/tutos/sslsockets)  or [English](/tutos/en/sslsockets)
