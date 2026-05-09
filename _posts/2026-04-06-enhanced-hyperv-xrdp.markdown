@@ -3,7 +3,7 @@ layout: post
 title:  "How does video work on Hyper-V, and how the hell do I get 'Enhanced Session' to actually work properly on Linux?!"
 date:   2026-05-09 00:00:00 +0200
 categories: hyper-v rdp xrdp
-permalink: /2026-hyperv-video
+permalink: /blog/2026-hyperv-video
 ---
 
 Sometimes, you want to run some Linux code that you don't really trust and need the isolation that a full-fledged Hyper-V VM provides. I've always been annoyed at how worse the experience becomes when you start doing so compared to what WSL has to offer: you now need to follow one of the gazillion guides that explain "how to make Hyper-V Enhanced Session work" because you want that sweet copy & paste feature, but end up copy pasting some random unexplained "disable tls security" stuff... I suspect that most of those guides simply copy/pasted some derivative of [Microsoft's original instructions](https://github.com/microsoft/linux-vm-tools/), back when they provided first-party Ubuntu VMs and [still cared](https://techcommunity.microsoft.com/blog/virtualization/sneak-peek-taking-a-spin-with-enhanced-linux-vms/382415), but don't actually understand a thing about the internals. I think it would be pretty cool to understand how all of that actually works and generally what the hell is going on when one starts `vmconnect.exe`. Or WSL for that matter. *Okay, let's do this one last time, yeah? For real this time.*
@@ -36,7 +36,7 @@ The issue with "Basic Sessions" is that they are not super user-friendly. You ca
 | "Enhanced Session" | RDP                    | RDP                          |
 
 On a **Basic Session**:
-  - **Generation 1** The Hyper-V host uses an "Emulated S3 controller" (`vms3cap.sys`). It's an entirely emulated video card that is detected as actual hardware by your VM. This required no adaptation from an OS to Hyper-V, but it has the downside of requiring a bunch of emulation which impacts non only performance but also increases "the attack surface", as Microsoft [puts it](https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/plan/Should-I-create-a-generation-1-or-2-virtual-machine-in-Hyper-V#whats-the-difference-in-device-support).
+  - **Generation 1** The Hyper-V host uses an "Emulated S3 controller" (`vms3cap.sys`). It's an entirely emulated video card that is detected as actual hardware by your VM. This required no adaptation from an OS to Hyper-V, but it has the downside of requiring a bunch of emulation which impacts not only performance but also increases "the attack surface", as Microsoft [puts it](https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/plan/Should-I-create-a-generation-1-or-2-virtual-machine-in-Hyper-V#whats-the-difference-in-device-support).
   - **Generation 2** VMs use a "Synthetic display controller", which is "software based" meaning that it requires a specific driver inside the VM kernel. Hyper-V uses the "VMBUS" (a communication channel between the Host and the VM, see [this](https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/architecture#vmbus-vsp-and-vsc)) to talk to the VM whose kernel is responsible for creating a virtual display adapter.
     - On Windows, this has obviously been integrated day-1 inside the `HyperVideo.sys` driver ("Microsoft VMBus Video Device Miniport Driver") driver.
     - On Linux, this started as an ["integration pack"](https://github.com/microsoft/LIS3.5/tree/master) before getting contributed by Microsoft to the linux kernel back in 2012 as the ["Hyper-V Frame Buffer driver" (or hyperv_fb)](https://github.com/torvalds/linux/blob/68eeb0871e986ae5462439dae881e3a27bcef85f/drivers/video/fbdev/hyperv_fb.c). This driver was [replaced in 2021](https://github.com/torvalds/linux/commit/40227f2efcfb7148fdee8d69ba52301951ef8a32) by a DRM-compatible variant ([hyperv_drm](https://github.com/torvalds/linux/tree/master/drivers/gpu/drm/hyperv)), but essentially works in the same way as it did back in 2012. It's built on an [implementation of the VMBUS](https://github.com/torvalds/linux/blob/68eeb0871e986ae5462439dae881e3a27bcef85f/drivers/hv/vmbus_drv.c) bundled in the linux kernel, also contributed by Microsoft, very similarly to Windows.
@@ -48,7 +48,7 @@ On an **Enhanced Session**:
 
 What about the client side? What actually comes out of `vmconnect.exe`? RDP. It's only RDP.
 
-![](rdp-always-has-been.png)
+![](/assets/posts/2026-04-06-enhanced-hyperv-xrdp/rdp-always-has-been.png)
 
 The connection flow is as follows:
 - The `vmconnect.exe` connects to the Hyper-V Virtual Machine Management service `vmms.exe` (yeah, the same that manages the VMs, handles Hyper-V WMI commands, etc.) on port TCP/2179. The fact that it's a TCP port allows `vmconnect.exe` to connect remotely.
@@ -57,7 +57,7 @@ The connection flow is as follows:
 - Modern RDP clients wrap their connection in TLS. What's a bit weird in this setup is that the TLS needs to happen between the `vmconnect.exe` client and `vmms.exe` as it handles the authentication. It wouldn't make sense to have to re-TLS the RDP stream between `vmms.exe` and the RDP server. The server therefore needs to be configured in a special mode, where it *says* that it supports TLS during the RDP negotiation, even though TLS actually never arrives because it's eaten by `vmms.exe`.
 
 <p align="center">
-  <img src="rdp-hv-vmms.png" alt="Centered image">
+  <img src="/assets/posts/2026-04-06-enhanced-hyperv-xrdp/rdp-hv-vmms.png" alt="Centered image">
   <br/>
   <a href="https://github.com/neutrinolabs/xrdp/pull/3514">PR #3514 from xrdp</a> showing the TLS is only between the client and vmms.exe
 </p>
