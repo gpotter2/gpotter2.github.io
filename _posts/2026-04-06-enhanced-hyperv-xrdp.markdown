@@ -3,7 +3,7 @@ layout: post
 title:  "How does video work on Hyper-V, and how the hell do I get 'Enhanced Session' to actually work properly on Linux?!"
 date:   2026-05-09 00:00:00 +0200
 categories: hyper-v rdp xrdp
-permalink: /blog/2026-hyperv-video
+permalink: /blog/hyperv-video
 ---
 
 Sometimes, you want to run some Linux code that you don't really trust and need the isolation that a full-fledged Hyper-V VM provides. I've always been annoyed at how worse the experience becomes when you start doing so compared to what WSL has to offer: you now need to follow one of the gazillion guides that explain "how to make Hyper-V Enhanced Session work" because you want that sweet copy & paste feature, but end up copy pasting some random unexplained "disable tls security" stuff... I suspect that most of those guides simply copy/pasted some derivative of [Microsoft's original instructions](https://github.com/microsoft/linux-vm-tools/), back when they provided first-party Ubuntu VMs and [still cared](https://techcommunity.microsoft.com/blog/virtualization/sneak-peek-taking-a-spin-with-enhanced-linux-vms/382415), but don't actually understand a thing about the internals.
