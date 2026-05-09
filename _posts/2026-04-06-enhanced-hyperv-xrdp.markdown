@@ -74,7 +74,9 @@ vmconnect=true
 
 ### **vmconnect.exe**
 
-Nothing to be said. Did you know it existed?
+Nothing to be said, it's what the console uses by default. Did you know you could run it directly? Make sure to launch it with UAC (Windows+R then `vmconnect.exe` and Shift+Enter).
+
+![](/assets/posts/2026-04-06-enhanced-hyperv-xrdp/vmconnect.png)
 
 ### **mstsc.exe** (native Windows)
 
