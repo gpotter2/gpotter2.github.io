@@ -1,6 +1,6 @@
 title: gpotter2's blog
 description: >- # this means to ignore newlines until "baseurl:"
-  A blog from the lead maintainer of Scapy regarding various topics.
+  This is my personal blog regarding various topics I want to touch on, but mostly networking :)
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "https://gpotter2.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username: _gpotter2

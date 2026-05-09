@@ -4,15 +4,10 @@ title: About
 permalink: /about/
 ---
 
-This is the base Jekyll theme. You can find out more info about customizing your Jekyll theme, as well as basic Jekyll usage documentation at [jekyllrb.com](https://jekyllrb.com/)
+Hi and welcome to my blog ! I try to give interesting technical details on topics that interest me, most notably:
 
-You can find the source code for Minima at GitHub:
-[jekyll][jekyll-organization] /
-[minima](https://github.com/jekyll/minima)
+- Networking Stuff. I'm the lead maintainer of [scapy](https://github.com/secdev/scapy), but I enjoy other things too !
+- Windows Internals, but mostly related to protocols hehe
+- Whatever other thing I want to look at
 
-You can find the source code for Jekyll at GitHub:
-[jekyll][jekyll-organization] /
-[jekyll](https://github.com/jekyll/jekyll)
-
-
-[jekyll-organization]: https://github.com/jekyll
+If you see a mistake or just want to say hi, feel free to hop in [the discussion tab of this repo](https://github.com/gpotter2/gpotter2.github.io/discussions) !
