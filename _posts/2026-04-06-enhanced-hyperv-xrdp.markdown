@@ -19,7 +19,7 @@ In 2026 you need the following. You DON'T need to touch anything related to TLS,
 port=vsock://1:3389
 vmconnect=true
 ```
-- (sound) install [`pipewire-module-xrdp`](https://packages.debian.org/sid/pipewire-module-xrdp) (debian), for other plateforms: https://github.com/neutrinolabs/xrdp/wiki/How-to-set-up-audio-redirection
+- (sound) install [`pipewire-module-xrdp`](https://packages.debian.org/sid/pipewire-module-xrdp) (debian), for other plateforms: [https://github.com/neutrinolabs/xrdp/wiki/How-to-set-up-audio-redirection](https://github.com/neutrinolabs/xrdp/wiki/How-to-set-up-audio-redirection)
 - On HyperV: `Set-VM -EnhancedSessionTransportType HvSocket <VMNAME>`
 
 # How video works on Hyper-V
@@ -82,14 +82,14 @@ Nothing to be said. Did you know it existed?
 2. Create a `.rdp` file with at least:
 ```
 full address:s:<Hyper-V machine name. Use FQDN so that kerberos works>
-pcb:s:<Hyper-V VM ID>
+pcb:s:<Hyper-V VM ID>;EnhancedMode=1
 server port:i:2179
 negotiate security layer:i:0
 sawvmconnect:i:1
 ```
 
 A few notes:
-- `pcb` is the "PCB", sent before the connection is actually established as explainer before
+- `pcb` is the "PCB", sent before the connection is actually established as explained before should point towards the ID of the VM. It has an extra field `;EnhancedMode=` which, you guessed it, can be 0 or 1 and tells `vmms.exe` whether you'd like it to try to use the Synthetic controller (Basic Session) or RDP (Enhanced Session) to talk to the VM.
 - `sawvmconnect` is some reverse-engineered magic parameter I found that sets the used SPN to "Microsoft Virtual Console Service/XXXX". It also disables CredSSP, so it won't prompt for a password and use Kerberos (hurrah). This should help a lot in hardened environments.
 
 ### **msrdc.exe** (Windows App / WSL / Microsoft Remote Desktop)
