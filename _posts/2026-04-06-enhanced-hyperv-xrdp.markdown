@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "How does video work on Hyper-V, and how the hell do I get 'Enhanced Session' to actually work properly on Linux?!"
+title:  "How does video work on Hyper-V, and how the hell do I get 'Enhanced Session' to actually work properly with a Linux VM?!"
 date:   2026-05-09 00:00:00 +0200
 categories: hyper-v rdp xrdp
 permalink: /blog/hyperv-video
