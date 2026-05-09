@@ -94,10 +94,16 @@ A few notes:
 
 ### **msrdc.exe** (Windows App / WSL / Microsoft Remote Desktop)
 
+`msrdc` is an alternative, "newer" than `mstsc`. It has the advantage of being able to use some newer, pretty cool features like [Multi Media Redirection](https://learn.microsoft.com/en-us/azure/virtual-desktop/multimedia-redirection-video-playback-calls?tabs=intune&pivots=azure-virtual-desktop) which allows to stream High FPS video from your VM.
+
 1. Same as for `mstsc.exe`;
 2. `sawvmconnect:i:1` isn't implemented. In a hardened environment, you can work around that by setting the GPO
   > Computer Configuration > Administrative templates > System > Credentials Delegation >
   > "Restrict delegation of credentials to remote servers" = Restrict Credential Delegation (at least, RestrictedAdmin also works but is more restrictive)
+3. You can add the following to have a dynamic resizing
+```
+dynamic resolution:i:1
+```
 
-It will have an impact on you other usages of RDP which might be an issue in corporate environments (you will need to enable RestrictedAdmin/Remote Credential Guard on all other machines via GPO, or your client won't be able to connect anymore). This is good in terms of security though.
+Setting the GPO will have an impact on you other usages of RDP which might be an issue in corporate environments (you will need to enable RestrictedAdmin/Remote Credential Guard on all other machines via GPO, or your client won't be able to connect anymore). This is good in terms of security though.
 
