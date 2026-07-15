@@ -16,7 +16,7 @@ In 2026 you need the following. You DON'T need to touch anything related to TLS,
 
 - install xrdp v0.14 or later, configure `/etc/xrdp/xrdp.ini` :
 ```
-port=vsock://1:3389
+port=vsock://-1:3389
 vmconnect=true
 ```
 - (sound) install [`pipewire-module-xrdp`](https://packages.debian.org/sid/pipewire-module-xrdp) (debian), for other plateforms: [https://github.com/neutrinolabs/xrdp/wiki/How-to-set-up-audio-redirection](https://github.com/neutrinolabs/xrdp/wiki/How-to-set-up-audio-redirection)
