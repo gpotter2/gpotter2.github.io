@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Game roulette</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: system-ui, sans-serif;
+      background: #101713;
+      color: #eef4ee;
+    }
+
+    body {
+      max-width: 700px;
+      margin: auto;
+      padding: 2rem 1.25rem;
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: .35rem;
+    }
+
+    p {
+      color: #b4c2b5;
+    }
+
+    .wheel-wrap {
+      position: relative;
+      width: min(80vw, 500px);
+      margin: 2rem auto;
+    }
+
+    .wheel-wrap::before {
+      content: '';
+      position: absolute;
+      z-index: 1;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-left: 14px solid transparent;
+      border-right: 14px solid transparent;
+      border-top: 27px solid #f5f7db;
+    }
+
+    canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 50%;
+      box-shadow: 0 0 0 6px #d7e5c6, 0 12px 40px #0008;
+    }
+
+    button {
+      border: 0;
+      border-radius: .4rem;
+      padding: .7rem 1.1rem;
+      background: #a8df55;
+      color: #14200d;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    details {
+      margin: 2.5rem auto 0;
+      max-width: 500px;
+      text-align: left;
+      color: #b4c2b5;
+    }
+
+    summary {
+      cursor: pointer;
+      color: #eef4ee;
+      font-weight: 600;
+    }
+
+    button:disabled {
+      opacity: .55;
+      cursor: wait;
+    }
+
+    #status {
+      min-height: 1.5em;
+    }
+
+    .error {
+      color: #ffb4a8;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Game roulette</h1>
+  <p id="loading-prompt">Please allow local device access</p>
+  <p id="ready-prompt" hidden>Let the wheel pick your next game.</p>
+  <div class="wheel-wrap" id="wheel-wrap" hidden><canvas id="wheel" width="700" height="700" role="img"
+      aria-label="Game selection wheel"></canvas></div>
+  <p id="status" role="status" aria-live="polite">Loading games…</p>
+  <button id="refresh" type="button" disabled hidden>Spin</button>
+  <details id="explanation" hidden>
+    <summary>What the fuck is going on?</summary>
+    <p>This page connects locally to the NVIDIA MCP server running on your PC at <code>http://127.0.0.1:13508/mcp</code>
+      to find your
+      games and launch the one selected by the wheel. This works because the MCP server is badly configured to respond
+      with
+      <code>Access-Control-Allow-Origin: null</code>. The <code>null</code> value is known to be problematic; as clearly
+      mentionned in <a
+        href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Access-Control-Allow-Origin#null">MDN
+        documentation for Access-Control-Allow-Origin</a>.
+    </p>
+    <p>To disable it, open the NVIDIA app, then go to settings and uncheck 'Allow Agents to control NVIDIA App'.</p>
+    <p>This is not super critical though, since there does not seem to be an obvious way of doing something much worse
+      than launching games, or tweaking game settings.</p>
+  </details>
+  <iframe id="rpc-frame" title="Local service connection" sandbox="allow-scripts allow-top-navigation allow-forms"
+    allow="local-network-access" hidden></iframe>
+  <script>
+    const status = document.getElementById('status');
+    const wheel = document.getElementById('wheel');
+    const wheelWrap = document.getElementById('wheel-wrap');
+    const explanation = document.getElementById('explanation');
+    const loadingPrompt = document.getElementById('loading-prompt');
+    const readyPrompt = document.getElementById('ready-prompt');
+    const refresh = document.getElementById('refresh');
+    const frame = document.getElementById('rpc-frame');
+    const pending = new Map();
+    let nextId = 1;
+    let games = [];
+    let wheelAnimation;
+
+    // Requests run inside the sandboxed frame with local network access.
+    function rpcBridge() {
+      const endpoint = 'http://127.0.0.1:13508/mcp';
+      async function invokeTool(name, args, id) {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream' },
+          body: JSON.stringify({ jsonrpc: '2.0', id, method: 'tools/call', params: { name, arguments: args } })
+        });
+        if (!response.ok) throw new Error(`Server returned HTTP ${response.status}.`);
+        const body = await response.text();
+        let message;
+        if (response.headers.get('content-type')?.includes('text/event-stream')) {
+          const event = body.split(/\r?\n\r?\n/).find(part => part.split(/\r?\n/).some(line => line.startsWith('data:')));
+          if (!event) throw new Error('Server returned an empty event stream.');
+          message = JSON.parse(event.split(/\r?\n/).filter(line => line.startsWith('data:')).map(line => line.slice(5).trimStart()).join('\n'));
+        } else {
+          message = JSON.parse(body);
+        }
+        if (message.error) throw new Error(message.error.message || 'RPC request failed.');
+        const result = message.result;
+        if (!result) throw new Error('Server returned no result.');
+        if (result.isError) throw new Error(result.content?.map(item => item.text).filter(Boolean).join(' ') || 'The tool failed.');
+        if (result.structuredContent) return result.structuredContent;
+        const text = result.content?.find(item => item.type === 'text')?.text;
+        if (text) { try { return JSON.parse(text); } catch { return { message: text }; } }
+        return result;
+      }
+
+      window.addEventListener('message', async event => {
+        if (event.source !== parent || event.data?.type !== 'rpc-request') return;
+        const { id, name, args } = event.data;
+        try {
+          const result = await invokeTool(name, args, id);
+          parent.postMessage({ type: 'rpc-response', id, result }, '*');
+        } catch (error) {
+          parent.postMessage({ type: 'rpc-response', id, error: error.message }, '*');
+        }
+      });
+      parent.postMessage({ type: 'rpc-ready' }, '*');
+    }
+
+    function callTool(name, args) {
+      const id = nextId++;
+      return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          pending.delete(id);
+          reject(new Error('The local service did not respond.'));
+        }, 30000);
+        pending.set(id, { resolve, reject, timeout });
+        frame.contentWindow.postMessage({ type: 'rpc-request', id, name, args }, '*');
+      });
+    }
+
+    window.addEventListener('message', event => {
+      if (event.source !== frame.contentWindow) return;
+      if (event.data?.type === 'rpc-ready') {
+        loadGames();
+      } else if (event.data?.type === 'rpc-response') {
+        const request = pending.get(event.data.id);
+        if (!request) return;
+        pending.delete(event.data.id);
+        clearTimeout(request.timeout);
+        if (event.data.error) request.reject(new Error(event.data.error));
+        else request.resolve(event.data.result);
+      }
+    });
+
+    function setStatus(message, error = false) {
+      status.textContent = message;
+      status.classList.toggle('error', error);
+    }
+
+    function drawWheel(games) {
+      const ctx = wheel.getContext('2d');
+      const center = wheel.width / 2;
+      const slice = 2 * Math.PI / games.length;
+      const colors = ['#587e49', '#315c4c', '#916a3e', '#4c637b', '#76546c', '#6b7941', '#85534a'];
+      ctx.clearRect(0, 0, wheel.width, wheel.height);
+      games.forEach((game, index) => {
+        const start = -Math.PI / 2 + index * slice;
+        ctx.beginPath();
+        ctx.moveTo(center, center);
+        ctx.arc(center, center, center, start, start + slice);
+        ctx.closePath();
+        ctx.fillStyle = colors[index % colors.length];
+        ctx.fill();
+        ctx.strokeStyle = '#101713';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.save();
+        ctx.translate(center, center);
+        ctx.rotate(start + slice / 2);
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 22px system-ui, sans-serif';
+        ctx.fillText(game.displayName || game.game, center - 20, 0, center * 0.68);
+        ctx.restore();
+      });
+      ctx.beginPath();
+      ctx.arc(center, center, 12, 0, 2 * Math.PI);
+      ctx.fillStyle = '#f5f7db';
+      ctx.fill();
+    }
+
+    async function loadGames() {
+      refresh.disabled = true;
+      setStatus('Loading games…');
+      wheelWrap.hidden = true;
+      explanation.hidden = true;
+      loadingPrompt.hidden = false;
+      readyPrompt.hidden = true;
+      refresh.hidden = true;
+      try {
+        const result = await callTool('nvapp_client_get_applications', {});
+        if (!Array.isArray(result.applications)) throw new Error('The server did not return an applications list.');
+        games = result.applications.filter(app => !app.isCreativeApp && typeof app.game === 'string' && app.game.length);
+        if (!games.length) {
+          setStatus('No games found.');
+          return;
+        }
+        drawWheel(games);
+        wheelWrap.hidden = false;
+        explanation.hidden = false;
+        loadingPrompt.hidden = true;
+        readyPrompt.hidden = false;
+        refresh.hidden = false;
+        refresh.textContent = 'Spin';
+        setStatus('Ready to spin.');
+      } catch (error) {
+        setStatus(`Could not load games: ${error.message} Make sure the NVIDIA app service is running and allows browser requests.`, true);
+      } finally {
+        refresh.disabled = false;
+        if (!games.length) {
+          refresh.textContent = 'Retry loading';
+          refresh.hidden = false;
+        }
+      }
+    }
+
+    async function spinWheel() {
+      if (!games.length) {
+        await loadGames();
+        return;
+      }
+      refresh.disabled = true;
+      try {
+        if (wheelAnimation) wheelAnimation.cancel();
+        wheel.style.transform = 'rotate(0deg)';
+        const selectedIndex = Math.floor(Math.random() * games.length);
+        const selected = games[selectedIndex];
+        const rotation = 360 * 6 + (360 - (selectedIndex + 0.5) * 360 / games.length);
+        setStatus('Spinning the wheel…');
+        wheelAnimation = wheel.animate(
+          [{ transform: 'rotate(0deg)' }, { transform: `rotate(${rotation}deg)` }],
+          { duration: 6000, easing: 'cubic-bezier(.12,.7,.12,1)', fill: 'forwards' }
+        );
+        await wheelAnimation.finished;
+        const name = selected.displayName || selected.game;
+        wheel.setAttribute('aria-label', `Selected game: ${name}`);
+        setStatus(`Selected ${name}. Launching…`);
+        try {
+          await callTool('nvapp_client_launch_application', { game: selected.game });
+          setStatus(`Selected ${name}. Launch requested!`);
+        } catch (error) {
+          setStatus(`Selected ${name}, but it could not be launched: ${error.message}`, true);
+        }
+      } catch (error) {
+        setStatus(`Could not spin the wheel: ${error.message}`, true);
+      } finally {
+        refresh.textContent = 'Spin again';
+        refresh.disabled = false;
+      }
+    }
+    refresh.addEventListener('click', spinWheel);
+    // User-agent checks are best effort: browsers can disguise their identity.
+    const userAgent = navigator.userAgent;
+    const brands = navigator.userAgentData?.brands?.map(item => item.brand) || [];
+    const isWindows = navigator.userAgentData?.platform === 'Windows' || /Windows NT/.test(userAgent);
+    const isEdge = brands.includes('Microsoft Edge') || /Edg\//.test(userAgent);
+    const isChrome = (brands.includes('Google Chrome') || /Chrome\//.test(userAgent)) &&
+      !/Edg\/|OPR\/|Opera|Vivaldi|SamsungBrowser|Brave/.test(userAgent) &&
+      !brands.some(brand => /Opera|Brave|Vivaldi/i.test(brand)) && !navigator.brave;
+
+    if (isWindows && (isChrome || isEdge)) {
+      frame.src = 'data:text/html,' + encodeURIComponent('<script>(' + rpcBridge.toString() + ')()<\/script>');
+    } else {
+      loadingPrompt.hidden = true;
+      setStatus('Sorry :( This browser or plateform is unsupported. Please use Google Chrome or Microsoft Edge on Windows.', true);
+    }
+  </script>
+</body>
+
+</html>
